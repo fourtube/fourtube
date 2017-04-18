@@ -1,0 +1,19 @@
+{
+    "youtube_key" : "",
+    "youtube_username" : null,
+    "youtube_password" : null,
+    "db" : { "backend":"mysql2",
+             "user":"user",
+            "pass":"pass",
+            "host":"127.0.0.1",
+            "table":"fourtube"
+    },
+    "sites": ["basicyoutube","4chan"],
+    "download": {
+        "tmp_dir":"/tmp/fourtube/tmp",
+        "destination_dir":"/tmp/fourtube/downloaded",
+        "youtube_dl_extra_args":"-q --no-mtime --no-call-home --add-metadata --recode-video mp4 --audio-quality 0  --write-thumbnail  --merge-output-format mp4 --no-mtime -f bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4 ",
+        "proxies":{},
+    }
+}
+
