@@ -18,15 +18,10 @@ $YT_DELETED_VIDEO_REASONS = [
     "This video has been removed for violating YouTube's Terms of Service.",
     "This video is no longer available because the YouTube account associated with this video has been terminated.",
     "This video is private",
-<<<<<<< HEAD
     "This video is no longer available because the uploader has closed their YouTube account",
     "This video has been removed for violating YouTube's policy on nudity or sexual content.",
     "This video has been removed for violating YouTube's policy on violent or graphic content.",
     "This video has been removed for violating YouTube's policy on harassment and bullying."
-=======
-    "This video has been removed for violating YouTube's policy on nudity or sexual content.",
-    "This video has been removed for violating YouTube's policy on violent or graphic content."
->>>>>>> 28edda3f5b9a80b35b6d1b7959f8bd9671176f5b
 ]
 $YT_COUNTRY_BLOCKED_MSG = [
     "blocked it in your country",
