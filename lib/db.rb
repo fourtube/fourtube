@@ -141,20 +141,8 @@ module DBUtils
         Infos.grep(:downloaded, "YTDLFAIL%").map(:downloaded)
     end
 
-    def DBUtils.fix_file()
-        Infos.where(:bien, true).select(:file, :yid, :title).each do |row|
-            if row[:file] =~ /^#{$CONF['download']['destination_dir']}/
-                file = Dir.glob("#{$CONF['download']['destination_dir']}/**/*#{row[:yid]}.mp4")[0]
-                if file 
-                    file = file.scan(/\/YT_G.*$/)[0]
-                    DBUtils.update_video_infos_from_hash(row[:yid],{file: file})
-                else
-                    puts "can't file file for yid #{row[:yid]}/#{row[:title]}"
-                end
-            else
-                puts "#{row[:file]} #{row[:title]}"
-            end
-        end
+    def DBUtils.get_all_bien()
+        return Infos.where(:bien, true)
     end
 end
 
