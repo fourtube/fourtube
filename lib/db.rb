@@ -29,7 +29,7 @@ module DBUtils
     end
 
     class Infos < Sequel::Model(:infos)
-        def before_create 
+        def before_create
             self.timestamp = Time.now
             super
         end
@@ -63,27 +63,21 @@ module DBUtils
         end
     end
 
-    def DBUtils.get_thumbsurl_from_yid(yid)
-        Thumbs.where(yid: yid).order(Sequel.asc(:timestamp)).select_map(:urlthumb)
-    end
-
-    def DBUtils.get_dls_from_source(source, delta)
-        Infos.where(source: source).where{timestamp > (Time.now() - delta)}.count
-    end
-
-    def DBUtils.save_thumbs(yid, thumbs)
-        Thumbs.multi_insert( thumbs.collect {|url| 
-            {yid: yid, urlthumb: url}
-        })
-    end
-
     def DBUtils.clean_dl()
         Infos.where(downloaded: DLING).update(downloaded: "")
         Infos.grep(:downloaded, "%402%").update(downloaded: "")
     end
 
+    def DBUtils.get_all_bien()
+        return Infos.where(:bien, true)
+    end
+
     def DBUtils.get_all_yids_without_infos()
         return Infos.where(title: nil, downloaded:"").order(Sequel.desc(:timestamp)).limit(15).select_map(:yid)
+    end
+
+    def DBUtils.get_dls_from_source(source, delta)
+        Infos.where(source: source).where{timestamp > (Time.now() - delta)}.count
     end
 
     def DBUtils.get_downloaded_from_yid(yid)
@@ -104,8 +98,16 @@ module DBUtils
         return Infos.select(:source).distinct
     end
 
+    def DBUtils.get_thumbsurl_from_yid(yid)
+        Thumbs.where(yid: yid).order(Sequel.asc(:timestamp)).select_map(:urlthumb)
+    end
+
     def DBUtils.get_video_infos(yid)
         return Infos.where(yid: yid).first
+    end
+
+    def DBUtils.get_ytdlfail()
+        Infos.grep(:downloaded, "YTDLFAIL%").map(:downloaded)
     end
 
     def DBUtils.pop_yid_to_download(minimum_duration:nil, maximum_duration:nil)
@@ -124,6 +126,16 @@ module DBUtils
         end
     end
 
+    def DBUtils.retry_old_failed_videos(delta=(86400 * 30))
+        Infos.grep(:downloaded, "YTDLFAIL%").where{timestamp < Time.now() - delta}.update(downloaded: RETRYDL)
+    end
+
+    def DBUtils.save_thumbs(yid, thumbs)
+        Thumbs.multi_insert( thumbs.collect {|url|
+            {yid: yid, urlthumb: url}
+        })
+    end
+
     def DBUtils.set_downloaded(yid, msg=DLDONE)
         Infos.where(yid: yid).update(downloaded: msg)
     end
@@ -131,18 +143,6 @@ module DBUtils
     def DBUtils.update_video_infos_from_hash(yid, hash)
         # TODO consistent notation
         Infos.where(yid: yid).update(hash)
-    end
-
-    def DBUtils.retry_old_failed_videos(delta=(86400 * 30))
-        Infos.grep(:downloaded, "YTDLFAIL%").where{timestamp < Time.now() - delta}.update(downloaded: RETRYDL)
-    end
-
-    def DBUtils.get_ytdlfail()
-        Infos.grep(:downloaded, "YTDLFAIL%").map(:downloaded)
-    end
-
-    def DBUtils.get_all_bien()
-        return Infos.where(:bien, true)
     end
 end
 
