@@ -84,6 +84,10 @@ module DBUtils
         return Infos.where(:yid => yid).get(:downloaded)
     end
 
+    def DBUtils.get_nb_to_dl()
+        return Infos.where(:downloaded => '').exclude(source: '').count()
+    end
+
     def DBUtils.get_nb_videos()
         return Infos.count()
     end
@@ -143,6 +147,10 @@ module DBUtils
     def DBUtils.update_video_infos_from_hash(yid, hash)
         # TODO consistent notation
         Infos.where(yid: yid).update(hash)
+    end
+
+    def DBUtils.do(p)
+        p.call
     end
 end
 
