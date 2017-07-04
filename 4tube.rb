@@ -173,6 +173,14 @@ class Main
                     DBUtils.get_all_yids_without_infos.each_slice(10).to_a.each do |yid_slice|
                         YoutubeUtils.get_batch_infos_with_key(yid_slice, $CONF["youtube_key"]).each do |infos|
                             yid = infos["yid"]
+                            if infos["infos"][:duration] < $CONF["download"]["minimum_duration"]
+                                @log.info("#{infos["infos"][:duration]} < #{$CONF["download"]["minimum_duration"]} setting downloaded to #{DBUtils::DLDONE}")
+                                DBUtils.set_downloaded(yid)
+                            end
+                            if infos["infos"][:duration] > $CONF["download"]["maximum_duration"]
+                                @log.info("#{infos["infos"][:duration]} > #{$CONF["download"]["maximum_duration"]} setting downloaded to #{DBUtils::DLDONE}")
+                                DBUtils.set_downloaded(yid)
+                            end
                             update_video_infos(infos)
                             count+=1
                         end
