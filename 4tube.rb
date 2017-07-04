@@ -15,6 +15,7 @@ $YT_DELETED_VIDEO_REASONS = [
     "This video does not exist.",
     "This video is not available.",
     "The YouTube account associated with this video has been terminated due to multiple third-party notifications of copyright infringement",
+    "This video has been removed by the user",
     "This video has been removed for violating YouTube's Terms of Service.",
     "This video is no longer available because the YouTube account associated with this video has been terminated.",
     "This video is private",
@@ -24,9 +25,9 @@ $YT_DELETED_VIDEO_REASONS = [
     "This video has been removed for violating YouTube's policy on harassment and bullying."
 ]
 $YT_COUNTRY_BLOCKED_MSG = [
-    "blocked it in your country",
-    "not available on this country domain",
-    "This video contains content from .*, who has blocked it on copyright grounds",
+    /blocked it in your country/,
+    /not available on this country domain/,
+    /This video contains content from .* who has blocked it on copyright grounds/,
 ]
 
 class Main
