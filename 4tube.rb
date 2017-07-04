@@ -220,6 +220,67 @@ class Main
         @log.warn "You can also re-run the last youtube-dl command with all the verbose flags to debugi"
     end
 
+    def do_error(error_message, yid, proxy_to_try, tried=false)
+        @log.debug "Handling error #{error_message}"
+        case error_message
+        when /#{yid}: YouTube said: (.*)$/i
+            yt_error = $1
+            case yt_error
+            when Regexp.union($YT_COUNTRY_BLOCKED_MSG)
+                if tried
+                    DBUtils.set_downloaded(yid, "RETRY: "+JSON.generate(tried.merge(proxy_to_try)))
+                else
+                    DBUtils.set_downloaded(yid, "RETRY: {}")
+                end
+            when /Playback on other websites has been disabled by the video owner./
+                err_msg = "Youtube said '#{yt_error}'"
+                DBUtils.set_downloaded(yid, "#{DBUtils::YTERROR} #{yt_error}")
+                @log.warn err_msg
+#            when /content too short/
+                # let's just retry later
+#                    ytdlfail(yid, yt_error)
+            when /Please sign in to view this video./
+                _msg = ""
+                if $CONF["youtube_username"]
+                    # WTF we are signed in
+                    _msg="#{DBUtils::YTDLFAIL} #{yt_error}"
+                else
+                    _msg="#{DBUtils::YTDLFAIL} need credentials"
+                end
+                @log.warn _msg
+                DBUtils.set_downloaded(yid, _msg)
+            when Regexp.union($YT_DELETED_VIDEO_REASONS)
+                # Unrecoverable error, videos sent to Youtube Limbo.
+                err_msg = "Youtube said '#{yt_error}'"
+                DBUtils.set_downloaded(yid, "#{DBUtils::YTERROR} #{yt_error}")
+                @log.warn err_msg
+            else
+                raise Exception.new("Problem with download of #{yid} : Unknown YouTube error '#{yt_error}'")
+            end
+        when /The uploader has not made this video available in your country/
+            if tried
+                DBUtils.set_downloaded(yid, "RETRY: "+JSON.generate(tried.merge(proxy_to_try)))
+            else
+                DBUtils.set_downloaded(yid, "RETRY: {}")
+            end
+        when /Signature extraction failed/
+            ytdlfail(yid, error_message)
+            return
+        when /would lead to an infinite loop/
+            DBUtils.set_downloaded(yid, DBUtils::RETRYDL)
+        when /Connection reset by peer/
+            DBUtils.set_downloaded(yid, DBUtils::RETRYDL)
+        when /content too short/i
+            DBUtils.set_downloaded(yid, DBUtils::RETRYDL)
+        when /This live stream recording is not available/
+            ytdlfail(yid, error_message)
+            return
+        else
+            DBUtils.set_downloaded(yid, "#{DBUtils::YTDLFAIL} #{error_message}")
+            raise Exception.new("Problem with download of #{yid} : Unknown youtube-dl error '#{error_message}'")
+        end
+    end
+
     def do_download(yid)
         video_file = nil
         Dir.chdir($CONF["download"]["tmp_dir"])
@@ -241,103 +302,64 @@ class Main
         end
         command = "#{@youtube_dl_cmd} #{proxy_cmd} https://www.youtube.com/watch?v=#{yid} 2>&1"
         @log.debug command
-        io = IO.popen(command)
         DBUtils.set_downloaded(yid, msg=DBUtils::DLING)
-        ytdl_msg = io.read.split("\n").join(" ")
+        ytdl_msg = nil
+        IO.popen(command) do |io|
+            ytdl_msg = io.read.split("\n").join(" ")
+        end
+#        if not ($?.exitstatus == 0)
+#            @log.debug "Exit status was #{$?.exitstatus}, retrying"
+#            command = "#{@youtube_dl_cmd.sub(' -q ', '')} #{proxy_cmd} https://www.youtube.com/watch?v=#{yid} 2>&1"
+#            @log.debug command
+#            IO.popen(command) do |io|
+#                ytdl_msg = io.read.split("\n").join(" ")
+#            end
+#            if not ($?.exitstatus == 0)
+#                do_error(ytdl_msg, yid, proxy_to_try, tried)
+#            end
+#        end
         case ytdl_msg
-        when /ERROR: (.+)$/
-            error_message = $1
-            case error_message
-            when /^#{yid}: YouTube said: (.*)$/
-                yt_error = $1
-                case yt_error
-                when Regexp.union($YT_COUNTRY_BLOCKED_MSG)
-                    if tried
-                        DBUtils.set_downloaded(yid, "RETRY: "+JSON.generate(tried.merge(proxy_to_try)))
-                    else
-                        DBUtils.set_downloaded(yid, "RETRY: {}")
-                    end
-                when /Playback on other websites has been disabled by the video owner./
-                    err_msg = "Youtube said '#{yt_error}'"
-                    DBUtils.set_downloaded(yid, "#{DBUtils::YTERROR} #{yt_error}")
-                    @log.warn err_msg
-                when /content too short/
-                    # let's just retry later
-#                    ytdlfail(yid, yt_error)
-                when /Please sign in to view this video./
-                    _msg = ""
-                    if $CONF["youtube_username"]
-                        # WTF we are signed in
-                        _msg="#{DBUtils::YTDLFAIL} #{yt_error}"
-                    else
-                        _msg="#{DBUtils::YTDLFAIL} need credentials"
-                    end
-                    @log.warn _msg
-                    DBUtils.set_downloaded(yid, _msg)
-                when Regexp.union($YT_DELETED_VIDEO_REASONS)
-                    # Unrecoverable error, videos sent to Youtube Limbo.
-                    err_msg = "Youtube said '#{yt_error}'"
-                    DBUtils.set_downloaded(yid, "#{DBUtils::YTERROR} #{yt_error}")
-                    @log.warn err_msg
-                else
-                    raise Exception.new("Problem with download of #{yid} : Unknown YouTube error '#{yt_error}'")
-                end
-            when /Signature extraction failed/
-                ytdlfail(yid, error_message)
-                return
-            when /would lead to an infinite loop/
-                DBUtils.set_downloaded(yid, DBUtils::RETRYDL)
-            when /Connection reset by peer/
-                DBUtils.set_downloaded(yid, DBUtils::RETRYDL)
-            when /content too short/i
-                DBUtils.set_downloaded(yid, DBUtils::RETRYDL)
-            when /The uploader has not made this video available in your country/
-                DBUtils.set_downloaded(yid, DBUtils::RETRYDL)
-            when /This live stream recording is not available/
-                ytdlfail(yid, error_message)
-                return
-            else
-                DBUtils.set_downloaded(yid, "#{DBUtils::YTDLFAIL} #{error_message}")
-                raise Exception.new("Problem with download of #{yid} : Unknown youtube-dl error '#{error_message}'")
-            end
-        when /^(WARNING: (.+)|)$/
+        when /error: (.+)$/i
+            do_error(ytdl_msg, yid, proxy_to_try, tried)
+        when /WARNING: (.+)$/
             warn = $1
             if warn!=""
-                @log.warn warn 
-                if warn=~/unable to log in: bad username or password/
-                    @log.warn "Use a webbrowser to connect to the YT Account, which was probabbly flagged as bot/spam"
+                @log.warn warn unless warn=~/Your copy of avconv is outdated, update avconv to version 10-0 or newer if you encounter any errors/
+                if warn=~/unable to log in: .*password/i
+                    warn = "Use a webbrowser to connect to the YT Account, which was probabbly flagged as bot/spam"
+                    raise warn
                 end
             end
-            @log.success "Downloading finished, now post processing"
-            output_files = Dir.glob("*#{yid}*",File::FNM_DOTMATCH)
-            if output_files.size > 2
-                raise "Too many output files in #{`pwd`}"
-            end
-            video_file = output_files.reject{ |f| f=~/\.jpg$/ }[0]
-            jpg_file = output_files.select{|f| f=~/\.jpg$/}[0]
-            if not jpg_file or not File.exist?(jpg_file)
-                if @video_converter_cmd
-                    `#{@video_converter_cmd} -i \"#{video_file}\" -vframes 1 -f image2 \"#{jpg_file}\"`
-                end
-            end
-            if File.exist?(jpg_file)
-                add_cover(video_file, File.read(jpg_file))
-                File.delete(jpg_file)
-            end
-            FileUtils.mv(video_file, $CONF["download"]["destination_dir"])
-            video_file = File.join($CONF["download"]["destination_dir"], video_file)
-            @log.success "PostProcessing #{yid} over."
-            DBUtils.set_downloaded(yid)
-            file_size = File.stat(video_file).size.to_i
-            DBUtils.update_video_infos_from_hash(yid,{file: File.basename(video_file), size: file_size})
+        when /has already been downloaded and merged/
+            # continue
+        when ""
+            # Continue
         else
-            if ytdl_msg=~/no such option: (--.*)/
-                @log.err "Your youtube-dl version probably doesn't support option #{$1}. Remove it from youtube_dl_extra_args in config.json or update your version"
-                exit 1
-            else
-                raise Exception.new("Error with youtube_dl: '#{ytdl_msg}'")
+            raise Exception.new("WTF #{ytdl_msg}")
+        end
+        @log.success "Downloading finished, now post processing"
+        output_files = Dir.glob("*#{yid}*",File::FNM_DOTMATCH)
+        if output_files.size > 2
+            pp output_files
+            raise "Too many output files in #{`pwd`}"
+        end
+        video_file = output_files.reject{ |f| f=~/\.jpg$/ }[0]
+        jpg_file = output_files.select{|f| f=~/\.jpg$/}[0]
+        if not jpg_file or not File.exist?(jpg_file)
+            if @video_converter_cmd
+                `#{@video_converter_cmd} -i \"#{video_file}\" -vframes 1 -f image2 \"#{jpg_file}\"`
             end
         end
+        if File.exist?(jpg_file)
+            add_cover(video_file, File.read(jpg_file))
+            File.delete(jpg_file)
+        end
+        FileUtils.mv(video_file, $CONF["download"]["destination_dir"])
+        video_file = File.join($CONF["download"]["destination_dir"], video_file)
+        @log.success "PostProcessing #{yid} over."
+        DBUtils.set_downloaded(yid)
+        file_size = File.stat(video_file).size.to_i
+        DBUtils.update_video_infos_from_hash(yid,{file: File.basename(video_file), size: file_size})
         return nil
     end
 
@@ -345,11 +367,18 @@ class Main
         # TODO have more than 1 ?
         @downloader = Thread.new {
             while true
-                yid = DBUtils.pop_yid_to_download(minimum_duration: $CONF["download"]["minimum_duration"], 
+                yid = DBUtils.pop_yid_to_download(minimum_duration: $CONF["download"]["minimum_duration"],
                                                   maximum_duration: $CONF["download"]["maximum_duration"])
                 if yid
                     cur_dir=Dir.pwd()
-                    do_download(yid)
+                    begin
+                        do_download(yid)
+                        nb_to_dl = DBUtils.get_nb_to_dl()
+                        @log.info "Still #{nb_to_dl} videos to download"
+                    rescue Exception => e
+                        @log.err "Exception when downloading #{yid}"
+                        raise e
+                    end
                     Dir.chdir(cur_dir)
                 else
 #                    @log.info "nothing to download, sleeping"
