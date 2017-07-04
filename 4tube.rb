@@ -126,12 +126,12 @@ class Main
         t = Thread.new{
             while true
                 now = Time.now().to_i
-                # Retry when we've waited "wait" time + up to 10% of wait, to appear not too bot-y
+                # Retry when we've waited "wait" time + up to 10% of wait, to appear not too bot-y
                 Fetcher.sites.select{|site| now - site.last_check > (site.wait*(1 + (rand() / 10))) }.each do |site|
                     count = 0
                     begin
                         site.get_yids().each { |yid|
-                            @log.info "#{site} found #{yid}"
+                            @log.info "#{site} found #{yid}"
                             DBUtils.add_yid(yid, site.name)
                             count += 1
                         }
