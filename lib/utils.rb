@@ -14,7 +14,7 @@ module YoutubeUtils
 
         res = Net::HTTP.get(URI.parse("https://www.googleapis.com/youtube/v3/videos?key=#{key}&part=snippet,contentDetails&id=#{yids.join(',')}"))
         doc=JSON.parse(res)
-        doc["items"].each do |item|
+        (doc["items"] || []).each do |item|
             hash_result= {"yid"=> item["id"], "status" => "error"}
             if item["contentDetails"]
                 values = {
