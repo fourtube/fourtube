@@ -37,18 +37,14 @@ class Main
     $: << File.join(File.dirname(__FILE__),"lib/taglib")
     require "taglib"
 
-    def initialize(config_file, arguments)
-        load_conf(config_file)
-        @arguments = arguments
+    def initialize(options)
         @log = MyLogger.new()
         @log.add_logger(Logger.new(STDOUT))
+        @arguments = options
+        load_conf(@arguments[:config])
         if @arguments[:logfile]
             @log.add_logger(Logger.new(@arguments[:logfile]))
         end
-
-        FileUtils.mkdir_p($CONF["download"]["destination_dir"])
-        FileUtils.mkdir_p($CONF["download"]["tmp_dir"])
-
 
         @threads=[]
     end
@@ -77,7 +73,6 @@ class Main
             raise e
         end
     end
-
 
     def start_fetcher_threads()
         load_sites()
@@ -324,6 +319,8 @@ class Main
     end
 
     def start_downloader_threads()
+        FileUtils.mkdir_p($CONF["download"]["destination_dir"])
+        FileUtils.mkdir_p($CONF["download"]["tmp_dir"])
 
         @youtube_dl_cmd = $CONF["download"]["youtube_dl_cmd"] || `which youtube-dl`.strip()
         if @youtube_dl_cmd == ""
@@ -413,16 +410,16 @@ class Main
         end
         DBUtils.retry_old_failed_videos()
 
-        @threads << start_informer_threads()
-        @threads << start_fetcher_threads()
-        @threads << start_downloader_threads()
+        @threads << start_informer_threads() if @arguments[:inform]
+        @threads << start_fetcher_threads() if @arguments[:fetch]
+        @threads << start_downloader_threads() if @arguments[:download]
         @threads.each {|t| t.join()}
     end
 
 end
 
-def main(conf, options)
-    m = Main.new(conf, options)
+def main(options)
+    m = Main.new(options)
     m.go()
 end
 
@@ -433,17 +430,51 @@ trap("INT"){
 }
 
 options = {
+    config: "config.json",
     download: true,
     fetch: true,
-    inform: true,
+    inform: true
 }
 OptionParser.new do |opts|
+    used_only = false
     opts.banner = "Usage: #{__FILE__}"
-    opts.on("--[no-]download") {|v| options[:download] = v}
-    opts.on("--[no-]fetch") {|v| options[:fetch] = v}
-    opts.on("--[no-]inform") {|v| options[:inform] = v}
-    opts.on("--logfile logfile") {|v| options[:logfile] = v}
+    opts.on("--download-only") {|v|
+        options[:download] = true
+        options[:fetch] = false
+        options[:inform] = false
+        used_only = true
+    }
+    opts.on("--fetch-only") {|v|
+        options[:download] = false
+		options[:fetch] = true
+		options[:inform] = false
+		used_only = true
+    }
+    opts.on("--inform-only") {|v|
+        options[:download] = false
+		options[:fetch] = false
+		options[:inform] = true
+		used_only = true
+    }
+    opts.on("--[no-]download") {|v|
+        raise Exception.new("Can't use --[no-]download with a --*-only switch on ") if used_only
+        options[:download] = v
+    }
+    opts.on("--[no-]fetch") {|v|
+        raise Exception.new("Can't use --[no-]fetch with a --*-only switch on ") if used_only
+        options[:fetch] = v
+    }
+    opts.on("--[no-]inform") {|v|
+        raise Exception.new("Can't use --[no-]inform with a --*-only switch on ") if used_only
+        options[:inform] = v
+    }
+    opts.on("--config config") {|v|
+        options[:config] = v
+    }
+    opts.on("--logfile logfile") {|v|
+        options[:logfile] = v
+    }
 end
 
 
-main(ARGV[0] || "config.json", options)
+main(options)
