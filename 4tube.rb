@@ -43,55 +43,8 @@ class Main
 
         FileUtils.mkdir_p($CONF["download"]["destination_dir"])
         FileUtils.mkdir_p($CONF["download"]["tmp_dir"])
-        @youtube_dl_cmd = $CONF["download"]["youtube_dl_cmd"] || `which youtube-dl`.strip()
-        if @youtube_dl_cmd == ""
-            @log.err "Please update \"youtube_dl_cmd\" in config.json to your local installation of youtube-dl, or remove that key altogether, to use the one in your PATH"
-            exit 1
-        else
-            begin
-                res = `#{@youtube_dl_cmd} --version | egrep "^20[0-9.]+$"`
-                raise unless res=~/^20[0-9.]+$/
-            rescue Exception => e
-                @log.err "'#{@youtube_dl_cmd}' is not a valid youtube-dl binary"
-                exit
-            end
-        end
-
-        # TODO move to "download"?
-        if not $CONF["youtube_username"]
-            @log.warn "You have not set a Youtube username in config.json."
-            @log.warn "You won't be able to download '18+' videos."
-        end
-
-        if not ($CONF["youtube_key"] and $CONF["youtube_key"].size > 5)
-            @log.warn "You have not set a Youtube API key in config.json."
-        end
-
-        @video_converter_cmd = $CONF["download"]["video_converter_cmd"] || "avconv"
-        begin
-            res = `#{@video_converter_cmd} -version 2>&1 | egrep "Copyright"`
-            raise unless res=~/developers/
-        rescue Exception => e
-            @log.warn "'#{@video_converter_cmd}' is not a valid video conversion command (use ffmpeg or avconv)"
-            @video_converter_cmd = nil
-        end
 
 
-        if $CONF["download"]["youtube_dl_extra_args"]
-            @youtube_dl_cmd << " " << $CONF["download"]["youtube_dl_extra_args"]
-        end
-        if $CONF["youtube_username"]
-            @youtube_dl_cmd << " -u \"#{$CONF['youtube_username']}\""
-            @youtube_dl_cmd << " -p \"#{$CONF['youtube_password']}\""
-        end
-
-        load_sites()
-
-        if Fetcher.sites.empty?
-            @log.err "Didn't find any site to parse for youtube URL."
-            @log.err "Add some in config.json, maybe?"
-            exit 1
-        end
         @threads=[]
     end
 
@@ -122,6 +75,14 @@ class Main
 
 
     def start_fetcher_threads()
+        load_sites()
+
+        if Fetcher.sites.empty?
+            @log.err "Didn't find any site to parse for youtube URL."
+            @log.err "Add some in config.json, maybe?"
+            exit 1
+        end
+
         @fetcher_threads = []
         tick = 5 # Verify everything every tick
         t = Thread.new{
@@ -358,6 +319,48 @@ class Main
     end
 
     def start_downloader_threads()
+
+        @youtube_dl_cmd = $CONF["download"]["youtube_dl_cmd"] || `which youtube-dl`.strip()
+        if @youtube_dl_cmd == ""
+            @log.err "Please update \"youtube_dl_cmd\" in config.json to your local installation of youtube-dl, or remove that key altogether, to use the one in your PATH"
+            exit 1
+        else
+            begin
+                res = `#{@youtube_dl_cmd} --version | egrep "^20[0-9.]+$"`
+                raise unless res=~/^20[0-9.]+$/
+            rescue Exception => e
+                @log.err "'#{@youtube_dl_cmd}' is not a valid youtube-dl binary"
+                exit
+            end
+        end
+        #
+        # TODO move to "download"?
+        if not $CONF["youtube_username"]
+            @log.warn "You have not set a Youtube username in config.json."
+            @log.warn "You won't be able to download '18+' videos."
+        end
+
+        @video_converter_cmd = $CONF["download"]["video_converter_cmd"] || "avconv"
+        begin
+            res = `#{@video_converter_cmd} -version 2>&1 | egrep "Copyright"`
+            raise unless res=~/developers/
+        rescue Exception => e
+            @log.warn "'#{@video_converter_cmd}' is not a valid video conversion command (use ffmpeg or avconv)"
+            @video_converter_cmd = nil
+        end
+
+        if $CONF["download"]["youtube_dl_extra_args"]
+            @youtube_dl_cmd << " " << $CONF["download"]["youtube_dl_extra_args"]
+        end
+        if $CONF["youtube_username"]
+            @youtube_dl_cmd << " -u \"#{$CONF['youtube_username']}\""
+            @youtube_dl_cmd << " -p \"#{$CONF['youtube_password']}\""
+        end
+
+        if not ($CONF["youtube_key"] and $CONF["youtube_key"].size > 5)
+            @log.warn "You have not set a Youtube API key in config.json."
+        end
+
         # TODO have more than 1 ?
         @downloader = Thread.new {
             while true
