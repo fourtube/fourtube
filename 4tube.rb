@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
 # encoding: utf-8
+require "optparse"
 
 begin
     require_relative "lib/db.rb"
@@ -36,10 +37,14 @@ class Main
     $: << File.join(File.dirname(__FILE__),"lib/taglib")
     require "taglib"
 
-    def initialize(config_file)
+    def initialize(config_file, arguments)
         load_conf(config_file)
+        @arguments = arguments
         @log = MyLogger.new()
         @log.add_logger(Logger.new(STDOUT))
+        if @arguments[:logfile]
+            @log.add_logger(Logger.new(@arguments[:logfile]))
+        end
 
         FileUtils.mkdir_p($CONF["download"]["destination_dir"])
         FileUtils.mkdir_p($CONF["download"]["tmp_dir"])
@@ -416,8 +421,8 @@ class Main
 
 end
 
-def main(conf)
-    m = Main.new(conf)
+def main(conf, options)
+    m = Main.new(conf, options)
     m.go()
 end
 
@@ -427,4 +432,18 @@ trap("INT"){
     exit
 }
 
-main(ARGV[0] || "config.json")
+options = {
+    download: true,
+    fetch: true,
+    inform: true,
+}
+OptionParser.new do |opts|
+    opts.banner = "Usage: #{__FILE__}"
+    opts.on("--[no-]download") {|v| options[:download] = v}
+    opts.on("--[no-]fetch") {|v| options[:fetch] = v}
+    opts.on("--[no-]inform") {|v| options[:inform] = v}
+    opts.on("--logfile logfile") {|v| options[:logfile] = v}
+end
+
+
+main(ARGV[0] || "config.json", options)
