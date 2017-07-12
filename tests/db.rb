@@ -27,7 +27,8 @@ class TestDB < Test::Unit::TestCase
         DBUtils.set_downloaded(yid, "DONE")
         assert_equal(nil, DBUtils.pop_yid_to_download())
 
-        DBUtils.set_downloaded(yid, "RETRY: {\"toto\":\"tutu\"}")
+        DBUtils.set_downloaded(yid, "RETRYDL: {\"toto\":\"tutu\"}")
+        DBUtils.update_video_infos_from_hash(yid, {source:'source'})
         assert_equal(yid, DBUtils.pop_yid_to_download())
         assert_equal({"toto"=>"tutu"}, DBUtils.get_retried(yid))
 

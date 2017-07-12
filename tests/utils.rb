@@ -24,7 +24,7 @@ class TestUtils < Test::Unit::TestCase
             published: "2012-07-15T07:46:32.000Z",
             title: "PSY - GANGNAM STYLE(강남스타일) M/V",
             duration: 253,
-            description: "PSY - DADDY(feat. CL of 2NE1) M/V @ https://youtu.be/FrG4TEcSuRg\nPSY - 나팔바지(NAPAL BAJI) M/V @ https://youtu.be/tF27TNC_4pc\n\nPSY - 7TH ALBUM '칠집싸이다' on iTunes @ http://smarturl.it/PSY_7THALBUM\n\nPSY - GANGNAM STYLE(강남스타일) on iTunes @ http://smarturl.it/PsyGangnam\n\n#PSY #싸이 #GANGNAMSTYLE #강남스타일\n\nMore about PSY@\nhttp://www.psypark.com/\nhttp://www.youtube.com/officialpsy\nhttp://www.facebook.com/officialpsy\nhttp://twitter.com/psy_oppa\nhttp://iTunes.com/PSY\nhttp://sptfy.com/PSY\nhttp://weibo.com/psyoppa\nhttp://twitter.com/ygent_official",
+            description: "PSY - DADDY(feat. CL of 2NE1) M/V @ https://youtu.be/FrG4TEcSuRg\nPSY - 나팔바지(NAPAL BAJI) M/V @ https://youtu.be/tF27TNC_4pc\n\nPSY - 7TH ALBUM '칠집싸이다' on iTunes @ http://smarturl.it/PSY_7THALBUM\n\nPSY - GANGNAM STYLE(강남스타일) on iTunes @ http://smarturl.it/PsyGangnam\n\n#PSY #싸이 #GANGNAMSTYLE #강남스타일\n\nMore about PSY@\nhttp://www.psypark.com/\nhttp://www.youtube.com/officialpsy\nhttp://www.facebook.com/officialpsy\nhttp://twitter.com/psy_oppa\nhttps://www.instagram.com/42psy42\nhttp://iTunes.com/PSY\nhttp://sptfy.com/PSY\nhttp://weibo.com/psyoppa\nhttp://twitter.com/ygent_official",
             uploader: "officialpsy",
             thumbs_max: ["https://i.ytimg.com/vi/9bZkp7q19f0/maxresdefault.jpg"],
             thumbs_mq: ["https://i.ytimg.com/vi/9bZkp7q19f0/mqdefault.jpg"],

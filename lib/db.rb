@@ -12,7 +12,7 @@ module DBUtils
     Sequel::Model.plugin(:schema)
 
     # TODO same with DONE, etc
-    RETRYDL = ""
+    RETRYDL = "RETRYDL"
     DLDONE = "DONE"
     DLING = "DLING"
     YTERROR = "YTERROR"
@@ -94,7 +94,7 @@ module DBUtils
 
     def DBUtils.get_retried(yid)
         d = Infos.where(:yid => yid).get(:downloaded)
-        retry_json = d[/^RETRY: ({.*})$/,1]
+        retry_json = d[/^#{RETRYDL}: ({.*})$/,1]
         return retry_json ? JSON.parse(retry_json) : nil
     end
 
@@ -122,16 +122,16 @@ module DBUtils
         if maximum_duration
             normal = normal.where('duration < ?', maximum_duration)
         end
-        if normal
-            normal.order(Sequel.asc(:timestamp)).get(:yid)
-        else
+        if normal.empty?
             # If we have RETRY, we already have popped, no need to re-check duration boudaries
-            Infos.grep(:downloaded, 'RETRY: %').exclude(source: '').order(Sequel.asc(:timestamp)).get(:yid)
+            Infos.grep(:downloaded, "#{RETRYDL}%").exclude(source: '').order(Sequel.asc(:timestamp)).get(:yid)
+        else
+            normal.order(Sequel.asc(:timestamp)).get(:yid)
         end
     end
 
     def DBUtils.retry_old_failed_videos(delta=(86400 * 30))
-        Infos.grep(:downloaded, "YTDLFAIL%").where{timestamp < Time.now() - delta}.update(downloaded: RETRYDL)
+        Infos.grep(:downloaded, "YTDLFAIL%").where{timestamp < Time.now() - delta}.update(downloaded: "")
     end
 
     def DBUtils.save_thumbs(yid, thumbs)
