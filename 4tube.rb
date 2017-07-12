@@ -319,6 +319,7 @@ class Main
     end
 
     def start_downloader_threads()
+        puts "Starting downloader thread"
         FileUtils.mkdir_p($CONF["download"]["destination_dir"])
         FileUtils.mkdir_p($CONF["download"]["tmp_dir"])
 
@@ -474,7 +475,7 @@ OptionParser.new do |opts|
     opts.on("--logfile logfile") {|v|
         options[:logfile] = v
     }
-end
+end.parse!
 
 
 main(options)
