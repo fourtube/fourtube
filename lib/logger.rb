@@ -48,27 +48,31 @@ end
 class MyLogger
     require "logger"
     def initialize()
-        @logger = Logger.new(STDOUT)
+        @loggers = []
+    end
+
+    def add_logger(l)
+        @loggers << l
     end
 
     def err(msg)
-        @logger.error Colors.red(msg)
+        @loggers.each {|l| l.error Colors.red(msg)}
     end
 
     def warn(msg)
-        @logger.warn Colors.yellow(msg)
+        @loggers.each {|l| l.warn Colors.yellow(msg)}
     end
 
     def info(msg)
-        @logger.info Colors.blue(msg)
+        @loggers.each {|l| l.info Colors.blue(msg)}
     end
 
     def debug(msg)
-        @logger.info Colors.grey(msg)
+        @loggers.each {|l| l.info Colors.grey(msg)}
     end
 
     def success(msg)
-        @logger.info Colors.green(msg)
+        @loggers.each {|l| l.info Colors.green(msg)}
     end
 end
 

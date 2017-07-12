@@ -39,6 +39,7 @@ class Main
     def initialize(config_file)
         load_conf(config_file)
         @log = MyLogger.new()
+        @log.add_logger(Logger.new(STDOUT))
 
         FileUtils.mkdir_p($CONF["download"]["destination_dir"])
         FileUtils.mkdir_p($CONF["download"]["tmp_dir"])
@@ -309,17 +310,7 @@ class Main
         IO.popen(command) do |io|
             ytdl_msg = io.read.split("\n").join(" ")
         end
-#        if not ($?.exitstatus == 0)
-#            @log.debug "Exit status was #{$?.exitstatus}, retrying"
-#            command = "#{@youtube_dl_cmd.sub(' -q ', '')} #{proxy_cmd} https://www.youtube.com/watch?v=#{yid} 2>&1"
-#            @log.debug command
-#            IO.popen(command) do |io|
-#                ytdl_msg = io.read.split("\n").join(" ")
-#            end
-#            if not ($?.exitstatus == 0)
-#                do_error(ytdl_msg, yid, proxy_to_try, tried)
-#            end
-#        end
+
         case ytdl_msg
         when /error: (.+)$/i
             do_error(ytdl_msg, yid, proxy_to_try, tried)
