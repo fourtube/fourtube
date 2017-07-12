@@ -152,5 +152,9 @@ module DBUtils
     def DBUtils.do(p)
         p.call
     end
+
+    def DBUtils.set_bien(yid, bien=true)
+        Infos.where(yid: yid).update(bien: bien)
+    end
 end
 

@@ -176,10 +176,12 @@ class Main
                             if infos["infos"][:duration] < $CONF["download"]["minimum_duration"]
                                 @log.info("#{infos["infos"][:duration]} < #{$CONF["download"]["minimum_duration"]} setting downloaded to #{DBUtils::DLDONE}")
                                 DBUtils.set_downloaded(yid)
+                                infos["infos"][:bien] = false
                             end
                             if infos["infos"][:duration] > $CONF["download"]["maximum_duration"]
                                 @log.info("#{infos["infos"][:duration]} > #{$CONF["download"]["maximum_duration"]} setting downloaded to #{DBUtils::DLDONE}")
                                 DBUtils.set_downloaded(yid)
+                                infos["infos"][:bien] = false
                             end
                             update_video_infos(infos)
                             count+=1
@@ -321,6 +323,7 @@ class Main
         case ytdl_msg
         when /error: (.+)$/i
             do_error(ytdl_msg, yid, proxy_to_try, tried)
+            return nil
         when /WARNING: (.+)$/
             warn = $1
             if warn!=""
@@ -381,7 +384,7 @@ class Main
                     end
                     Dir.chdir(cur_dir)
                 else
-#                    @log.info "nothing to download, sleeping"
+                    @log.info "nothing to download, sleeping"
                     sleep 60
                 end
             end
