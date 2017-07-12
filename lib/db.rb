@@ -73,7 +73,7 @@ module DBUtils
     end
 
     def DBUtils.get_all_yids_without_infos()
-        return Infos.where(title: nil, downloaded:"").order(Sequel.desc(:timestamp)).limit(15).select_map(:yid)
+        return Infos.where(title: nil, downloaded:"").exclude(source:'').order(Sequel.desc(:timestamp)).limit(15).select_map(:yid)
     end
 
     def DBUtils.get_dls_from_source(source, delta)
