@@ -76,7 +76,6 @@ class Main
 
     def start_fetcher_threads()
         load_sites()
-
         if Fetcher.sites.empty?
             @log.err "Didn't find any site to parse for youtube URL."
             @log.err "Add some in config.json, maybe?"
@@ -86,6 +85,7 @@ class Main
         @fetcher_threads = []
         tick = 5 # Verify everything every tick
         t = Thread.new{
+            @log.info "Starting fetcher thread"
             while true
                 now = Time.now().to_i
                 # Retry when we've waited "wait" time + up to 10% of wait, to appear not too bot-y
@@ -93,7 +93,7 @@ class Main
                     count = 0
                     begin
                         site.get_yids().each { |yid|
-                            @log.info "#{site} found #{yid}"
+                            #@log.info "#{site} found #{yid}"
                             DBUtils.add_yid(yid, site.name)
                             count += 1
                         }
@@ -127,8 +127,8 @@ class Main
 
     def start_informer_threads()
         @informer = Thread.new {
+            @log.info "Starting informer thread"
             Thread.current[:name]="Informer"
-            @log.info "Informer thread starts"
             while true
                 count = 0
                 if $CONF["youtube_key"] and $CONF["youtube_key"].size > 5
@@ -136,12 +136,12 @@ class Main
                         YoutubeUtils.get_batch_infos_with_key(yid_slice, $CONF["youtube_key"]).each do |infos|
                             yid = infos["yid"]
                             if infos["infos"][:duration] < $CONF["download"]["minimum_duration"]
-                                @log.info("#{infos["infos"][:duration]} < #{$CONF["download"]["minimum_duration"]} setting downloaded to #{DBUtils::DLDONE}")
+                     #           @log.info("#{infos["infos"][:duration]} < #{$CONF["download"]["minimum_duration"]} setting downloaded to #{DBUtils::DLDONE}")
                                 DBUtils.set_downloaded(yid)
                                 infos["infos"][:bien] = false
                             end
                             if infos["infos"][:duration] > $CONF["download"]["maximum_duration"]
-                                @log.info("#{infos["infos"][:duration]} > #{$CONF["download"]["maximum_duration"]} setting downloaded to #{DBUtils::DLDONE}")
+                     #           @log.info("#{infos["infos"][:duration]} > #{$CONF["download"]["maximum_duration"]} setting downloaded to #{DBUtils::DLDONE}")
                                 DBUtils.set_downloaded(yid)
                                 infos["infos"][:bien] = false
                             end
@@ -319,7 +319,6 @@ class Main
     end
 
     def start_downloader_threads()
-        puts "Starting downloader thread"
         FileUtils.mkdir_p($CONF["download"]["destination_dir"])
         FileUtils.mkdir_p($CONF["download"]["tmp_dir"])
 
@@ -366,6 +365,7 @@ class Main
 
         # TODO have more than 1 ?
         @downloader = Thread.new {
+            @log.info "Starting downloader thread"
             while true
                 yid = DBUtils.pop_yid_to_download(minimum_duration: $CONF["download"]["minimum_duration"],
                                                   maximum_duration: $CONF["download"]["maximum_duration"])
@@ -381,7 +381,6 @@ class Main
                     end
                     Dir.chdir(cur_dir)
                 else
-                    @log.info "nothing to download, sleeping"
                     sleep 60
                 end
             end

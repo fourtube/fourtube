@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 require_relative "../lib/fetcher.rb"
-require "pp"
 
 class BasicYoutube < Fetcher
     require "net/http"
@@ -17,7 +16,6 @@ class BasicYoutube < Fetcher
     end
 
     def fetch_url(url: , headers:{}, post_data:nil, limit:10)
-        pp url
         if limit == 0
             # TODO msg
             $stderr.puts "Error, too may redirects for #{url}"
