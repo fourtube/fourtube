@@ -124,10 +124,9 @@ module DBUtils
         end
         if normal.empty?
             # If we have RETRY, we already have popped, no need to re-check duration boudaries
-            Infos.grep(:downloaded, "#{RETRYDL}%").exclude(source: '').order(Sequel.asc(:timestamp)).get(:yid)
-        else
-            normal.order(Sequel.asc(:timestamp)).get(:yid)
+            normal = Infos.grep(:downloaded, "#{RETRYDL}%").exclude(source: '')
         end
+        normal = normal.order(Sequel.asc(:timestamp)).get(:yid)
     end
 
     def DBUtils.retry_old_failed_videos(delta=(86400 * 30))
