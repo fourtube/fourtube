@@ -63,32 +63,47 @@ class BasicYoutube < Fetcher
     end
 end
 
-BasicYoutube.new( 
+BasicYoutube.new(
     url: "https://www.reddit.com/r/DeepIntoYouTube/",
     wait: 2*60*60,
     name: "reddit_deepintoyoutube"
 )
-BasicYoutube.new( 
+BasicYoutube.new(
     url: "https://www.reddit.com/r/WTF/",
     wait: 30*60,
     name: "reddit_wtf"
 )
-BasicYoutube.new( 
+BasicYoutube.new(
     url: "https://www.reddit.com/r/WTF/new/",
     wait: 10*60,
     name: "reddit_wtf_new"
 )
-BasicYoutube.new( 
+BasicYoutube.new(
+    url: "https://www.reddit.com/r/IllBeYourGuide/",
+    wait: 2*60*60,
+    name: "reddit_wtf_new"
+)
+BasicYoutube.new(
+    url: "https://www.reddit.com/r/InterdimensionalCable/",
+    wait: 4*60*60,
+    name: "reddit_wtf_new"
+)
+BasicYoutube.new(
+    url: "https://www.reddit.com/r/WTFMusicVideos/new/",
+    wait: 10*60,
+    name: "reddit_wtf_new"
+)
+BasicYoutube.new(
     url: "http://www.flipsidejapan.com/",
     wait: 5*60*60,
     name: "flipsidejapan"
 )
-BasicYoutube.new( 
+BasicYoutube.new(
     url: "http://everythingisterrible.blogspot.com/feeds/pages/default",
     wait: 4*60*60,
     name: "everything"
 )
-BasicYoutube.new( 
+BasicYoutube.new(
     url: "http://www.brain-magazine.fr/articles/page-pute/",
     wait: 24*60*60,
     name: "brain",
