@@ -5,7 +5,7 @@ require_relative "../lib/fetcher.rb"
 
 class LocalFetcher < Fetcher
     def initialize(url)
-        super
+        super()
         @url = url
         @file_path = @url.sub("file://","")
     end
