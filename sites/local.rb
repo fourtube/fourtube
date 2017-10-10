@@ -5,8 +5,8 @@ require_relative "../lib/fetcher.rb"
 
 class LocalFetcher < Fetcher
     def initialize(url)
+        super
         @url = url
-        add_source(self)      # Don't forget that !
         @file_path = @url.sub("file://","")
     end
 
@@ -14,18 +14,7 @@ class LocalFetcher < Fetcher
         yids = []
         return yids unless File.exist?(@file_path)
         File.open(@file_path,"r").each_line do |l|
-            case l
-            when /youtube.com\/watch\?v=(#{Fetcher::YIDPATTERN})/
-                yids << $1
-            when /youtube.com\/embed\/(#{Fetcher::YIDPATTERN})/
-                yids << $1
-            when /youtube.com\/v\/(#{Fetcher::YIDPATTERN})/
-                yids << $1
-            when /youtu.be\/(#{Fetcher::YIDPATTERN})/
-                yids << $1
-            when /^\s*(#{Fetcher::YIDPATTERN})\s*$/
-                yids << $1
-            end
+            yids.concat(extract_yids_from_string(l))
         end
         File.open(@file_path,"w") do |f|
             f.truncate(0)

@@ -5,14 +5,14 @@ require_relative "../lib/fetcher.rb"
 
 class BasicYoutube < Fetcher
     require "net/http"
-    require "nokogiri"
 
-    def initialize(url: , post_data:nil,wait:30*60, name:nil, test: false)
+    def initialize(url: , post_data: nil, wait: 30*60, name: nil)
+        super()
         @url = url
         @post_data = post_data
         @wait = wait
         @name = name || self.class.to_s
-        add_source(self)
+        @html = nil
     end
 
     def fetch_url(url: , headers:{}, post_data:nil, limit:10)
@@ -46,20 +46,12 @@ class BasicYoutube < Fetcher
         raise "Failure when fetching new yids for #{self}: Unknown http code #{res.code}.\n #{res.body}"
     end
 
-    def parse(html)
-        return Nokogiri::HTML(html)
-    end
-
     def get_yids()
         yids = []
-        html = fetch_url(url: @url, post_data: @post_data)
-        if html
-            yids.concat html.scan(/youtube.com\/watch\?v=(#{Fetcher::YIDPATTERN})/).flatten
-            yids.concat html.scan(/youtube.com\/embed\/(#{Fetcher::YIDPATTERN})/).flatten
-            yids.concat html.scan(/youtube.com\/v\/(#{Fetcher::YIDPATTERN})/).flatten
-            yids.concat html.scan(/youtu.be\/(#{Fetcher::YIDPATTERN})/).flatten
+        unless @html
+            @html = fetch_url(url: @url, post_data: @post_data)
         end
-        return yids.compact.uniq
+        return extract_yids_from_string(@html)
     end
 end
 
@@ -108,3 +100,9 @@ BasicYoutube.new(
     wait: 24*60*60,
     name: "brain",
 )
+BasicYoutube.new(
+    url: "https://boards.4chan.org/b/",
+    wait: 10*60,
+    name: "4chan_b"
+)
+
