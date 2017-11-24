@@ -39,11 +39,17 @@ class Main
 
     def initialize(options)
         @log = MyLogger.new()
-        @log.add_logger(Logger.new(STDOUT))
+        stdout_logger = Logger.new(STDOUT)
+        stdout_logger.level = Logger::INFO
+        @log.add_logger(stdout_logger)
         @arguments = options
         load_conf(@arguments[:config])
-        if @arguments[:logfile]
-            @log.add_logger(Logger.new(@arguments[:logfile]))
+
+        logfile = @arguments[:logfile] || $CONF["logfile"]
+        if logfile
+            logger = Logger.new(logfile)
+            logger.level = Logger::DEBUG
+            @log.add_logger(logger)
         end
 
         @threads=[]
@@ -181,7 +187,7 @@ class Main
         DBUtils.set_downloaded(yid, DBUtils::YTDLFAIL)
         @log.warn "The current version of youtube-dl failed to download #{yid} with error #{errmsg}."
         @log.warn "Please update your youtube-dl version."
-        @log.warn "You can also re-run the last youtube-dl command with all the verbose flags to debugi"
+        @log.warn "You can also re-run the last youtube-dl command with all the verbose flags to debug"
     end
 
     def do_error(error_message, yid, proxy_to_try, tried=false)

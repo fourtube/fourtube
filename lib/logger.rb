@@ -68,7 +68,7 @@ class MyLogger
     end
 
     def debug(msg)
-        @loggers.each {|l| l.info Colors.grey(msg)}
+        @loggers.each {|l| l.debug Colors.grey(msg)}
     end
 
     def success(msg)
