@@ -279,7 +279,7 @@ class Main
         when /WARNING: (.+)$/
             warn = $1
             if warn!=""
-                @log.warn warn unless warn=~/Your copy of avconv is outdated, update avconv to version 10-0 or newer if you encounter any errors/
+                @log.warn warn unless warn=~/Your copy of avconv is outdated, update avconv to version/
                 if warn=~/unable to log in: .*password/i
                     warn = "Use a webbrowser to connect to the YT Account, which was probabbly flagged as bot/spam"
                     raise warn
