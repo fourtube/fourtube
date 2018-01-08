@@ -40,7 +40,7 @@ class Main
     def initialize(options)
         @log = MyLogger.new()
         stdout_logger = Logger.new(STDOUT)
-        stdout_logger.level = Logger::INFO
+        stdout_logger.level = options[:debug] ? Logger::DEBUG : Logger::INFO
         @log.add_logger(stdout_logger)
         @arguments = options
         load_conf(@arguments[:config])
@@ -278,6 +278,8 @@ class Main
             ytdl_msg = io.read.split("\n").join(" ")
         end
 
+        @log.debug ytdl_msg
+
         case ytdl_msg
         when /error: (.+)$/i
             do_error(ytdl_msg, yid, proxy_to_try, tried)
@@ -387,9 +389,11 @@ class Main
                     end
                     Dir.chdir(cur_dir)
                 else
+                    @log.debug "Nothing worthy of downloading"
                     sleep 60
                 end
             end
+            @log.debug "Logger thread ded =("
             sleep 1
         }
         @downloader.abort_on_exception = true
@@ -473,6 +477,9 @@ OptionParser.new do |opts|
     opts.on("--[no-]inform") {|v|
         raise Exception.new("Can't use --[no-]inform with a --*-only switch on ") if used_only
         options[:inform] = v
+    }
+    opts.on("--debug") {|v|
+        options[:debug] = true
     }
     opts.on("--config config") {|v|
         options[:config] = v
