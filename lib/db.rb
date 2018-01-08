@@ -73,7 +73,7 @@ module DBUtils
     end
 
     def DBUtils.get_all_yids_without_infos()
-        return Infos.where(title: nil, downloaded:"").exclude(source:'').order(Sequel.desc(:timestamp)).limit(15).select_map(:yid)
+        return Infos.where(title: nil, downloaded:"").exclude(source:'').order(Sequel.desc(:timestamp)).select_map(:yid)
     end
 
     def DBUtils.get_dls_from_source(source, delta)
@@ -117,10 +117,10 @@ module DBUtils
     def DBUtils.pop_yid_to_download(minimum_duration:nil, maximum_duration:nil)
         normal = Infos.where(downloaded: '').exclude(source: '')
         if minimum_duration
-            normal = normal.where('duration > ?', minimum_duration)
+            normal = normal.where('duration >= ?', minimum_duration)
         end
         if maximum_duration
-            normal = normal.where('duration < ?', maximum_duration)
+            normal = normal.where('duration <= ?', maximum_duration)
         end
         if normal.empty?
             # If we have RETRY, we already have popped, no need to re-check duration boudaries
