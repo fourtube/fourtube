@@ -31,6 +31,10 @@ $YT_COUNTRY_BLOCKED_MSG = [
     /This video contains content from .* who has blocked it on copyright grounds/,
 ]
 
+
+class YTDLException < Exception
+end
+
 class Main
     require "fileutils"
     require "json"
@@ -225,7 +229,7 @@ class Main
                 DBUtils.set_downloaded(yid, "#{DBUtils::YTERROR} #{yt_error}")
                 @log.warn err_msg
             else
-                raise Exception.new("Problem with download of #{yid} : Unknown YouTube error '#{yt_error}'")
+                raise YTDLException.new("Unknown YouTube error '#{yt_error}'")
             end
         when /The uploader has not made this video available in your country/
             if tried
@@ -247,7 +251,7 @@ class Main
             return
         else
             DBUtils.set_downloaded(yid, "#{DBUtils::YTDLFAIL} #{error_message}")
-            raise Exception.new("Problem with download of #{yid} : Unknown youtube-dl error '#{error_message}'")
+            raise YTDLException.new("Unknown youtube-dl error '#{error_message}'")
         end
     end
 
@@ -383,6 +387,8 @@ class Main
                         do_download(yid)
                         nb_to_dl = DBUtils.get_nb_to_dl()
                         @log.info "Still #{nb_to_dl} videos to download"
+                    rescue YTDLException => e
+                        @log.err "Exception when downloading #{yid}: #{e.message}"
                     rescue Exception => e
                         @log.err "Exception when downloading #{yid}"
                         raise e
@@ -393,7 +399,7 @@ class Main
                     sleep 60
                 end
             end
-            @log.debug "Logger thread ded =("
+            @log.debug "downloader thread ded =("
             sleep 1
         }
         @downloader.abort_on_exception = true
