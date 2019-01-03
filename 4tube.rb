@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 require "optparse"
+require "pp"
 
 begin
     require_relative "lib/db.rb"
@@ -14,10 +15,12 @@ require_relative "lib/utils.rb"
 
 $YT_DELETED_VIDEO_REASONS = [
     "This video does not exist.",
+    "This video is unavailable.",
     "This video is not available.",
     "The YouTube account associated with this video has been terminated due to multiple third-party notifications of copyright infringement",
     "This video has been removed by the user",
     "This video has been removed for violating YouTube's Terms of Service.",
+    "due to a copyright claim by a third party",
     "This video is no longer available because the YouTube account associated with this video has been terminated.",
     "This video is private",
     "This video is no longer available because the uploader has closed their YouTube account",
@@ -28,6 +31,7 @@ $YT_DELETED_VIDEO_REASONS = [
 $YT_COUNTRY_BLOCKED_MSG = [
     /blocked it in your country/,
     /not available on this country domain/,
+    /This video is not available in your country/,
     /This video contains content from .* who has blocked it on copyright grounds/,
 ]
 
@@ -140,6 +144,7 @@ class Main
             @log.info "Starting informer thread"
             Thread.current[:name]="Informer"
             while true
+                begin
                 count = 0
                 if $CONF["youtube_key"] and $CONF["youtube_key"].size > 5
                     DBUtils.get_all_yids_without_infos.each_slice(10).to_a.each do |yid_slice|
@@ -167,6 +172,10 @@ class Main
                     end
                 end
                 @log.info "Informer updated #{count} videos infos" unless count == 0
+                rescue Net::OpenTimeout, SocketError
+                    @log.warn("woops, youtube is slow today")
+                    sleep 10
+                end
                 sleep 5
             end
         }
@@ -197,7 +206,8 @@ class Main
     def do_error(error_message, yid, proxy_to_try, tried=false)
         @log.debug "Handling error #{error_message}"
         case error_message
-        when /#{yid}: YouTube said: (.*)$/i
+        when /ERROR: (.*)$/i
+        #when /#{yid}: YouTube said: (.*)$/i
             yt_error = $1
             case yt_error
             when Regexp.union($YT_COUNTRY_BLOCKED_MSG)
@@ -225,17 +235,17 @@ class Main
                 DBUtils.set_downloaded(yid, _msg)
             when Regexp.union($YT_DELETED_VIDEO_REASONS)
                 # Unrecoverable error, videos sent to Youtube Limbo.
-                err_msg = "Youtube said '#{yt_error}'"
+                err_msg = "Youtube said '#{yt_error}', deleting"
                 DBUtils.set_downloaded(yid, "#{DBUtils::YTERROR} #{yt_error}")
                 @log.warn err_msg
+            when /The uploader has not made this video available in your country/
+                if tried
+                    DBUtils.set_downloaded(yid, "RETRY: "+JSON.generate(tried.merge(proxy_to_try)))
+                else
+                    DBUtils.set_downloaded(yid, "RETRY: {}")
+                end
             else
                 raise YTDLException.new("Unknown YouTube error '#{yt_error}'")
-            end
-        when /The uploader has not made this video available in your country/
-            if tried
-                DBUtils.set_downloaded(yid, "RETRY: "+JSON.generate(tried.merge(proxy_to_try)))
-            else
-                DBUtils.set_downloaded(yid, "RETRY: {}")
             end
         when /Signature extraction failed/
             ytdlfail(yid, error_message)
