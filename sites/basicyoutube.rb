@@ -96,7 +96,7 @@ BasicYoutube.new(
     name: "everything"
 )
 BasicYoutube.new(
-    url: "http://www.brain-magazine.fr/articles/page-pute/",
+    url: "https://www.brain-magazine.fr/articles/page-pute/",
     wait: 24*60*60,
     name: "brain",
 )
