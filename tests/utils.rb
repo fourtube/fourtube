@@ -58,7 +58,7 @@ class TestUtils < Test::Unit::TestCase
         end
     end
 
-    def _test_pull_from_youtube()
+    def test_pull_from_youtube()
         $CASES.each do |y,t|
             # Pulling html page from youtube only once
             yid = y
