@@ -42,6 +42,8 @@ class BasicYoutube < Fetcher
             return nil
         when "503"
             return nil
+        when "525"
+            return nil
         end
         raise "Failure when fetching new yids for #{self}: Unknown http code #{res.code}.\n #{res.body}"
     end

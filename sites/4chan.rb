@@ -13,7 +13,10 @@ class Fetcher4chan < BasicYoutube
     def get_yids()
         html = fetch_url(url: @url)
         chanpatt=/watch\?v=(...<wbr>........)/
-        return html.split(/<\/?a/).map{|l| l[chanpatt,1]}.compact.uniq.map{|yi|yi.gsub("<wbr>","")}.select {|yi| yi=~Fetcher::YIDPATTERN}
+        if html
+          return html.split(/<\/?a/).map{|l| l[chanpatt,1]}.compact.uniq.map{|yi|yi.gsub("<wbr>","")}.select {|yi| yi=~Fetcher::YIDPATTERN}
+        end
+        nil
     end
 end
 
