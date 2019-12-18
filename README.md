@@ -25,7 +25,7 @@ TL;DR, with MySQL DB:
     vim config.json
     gem install taglib-ruby -i /tmp/
     mkdir lib/taglib
-    mv /tmp/gems/taglib-ruby-0.*/lib/taglib* lib/taglib/
+    cp -a /tmp/gems/taglib-ruby-0.*/lib/taglib* lib/taglib/
     ruby 4tube.rb
 
 More info in the [Requirements](https://github.com/fourtube/fourtube/wiki/Requirements) wiki page.
