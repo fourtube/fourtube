@@ -6,10 +6,8 @@ module DBUtils
     require "json"
     if not Object.const_defined?(:DB)
         c = JSON.parse(File.read(File.join(File.dirname(__FILE__),"..","config.json")))["db"]
-        DB = Sequel.connect("#{c['backend']}://#{c['host']}/#{c['table']}?user=#{c['user']}&password=#{c['pass']}")
+        DB = Sequel.connect("#{c['backend']}://#{c['host']}/#{c['table']}?user=#{c['user']}&password=#{c['pass']}", encoding: 'utf8mb4')
     end
-
-    Sequel::Model.plugin(:schema)
 
     # TODO same with DONE, etc
     RETRYDL = "RETRYDL"
@@ -18,25 +16,22 @@ module DBUtils
     YTERROR = "YTERROR"
     YTDLFAIL = "YTDLFAIL"
 
+    unless DB.table_exists?(:thumbs)
+      DB.create_table(:thumbs) do
+        primary_key :id
+        String      :yid, :unique => true, :empty => false
+        String      :urlthumb, :unique => false
+        Bool        :cached, default: false
+      end
+    end
     class Thumbs < Sequel::Model(:thumbs)
-        set_schema do
-            primary_key :id
-            String      :yid, :unique => true, :empty => false
-            String      :urlthumb, :unique => false
-            Bool        :cached, default: false
-        end
-        create_table unless table_exists?
     end
 
-    class Infos < Sequel::Model(:infos)
-        def before_create
-            self.timestamp = Time.now
-            super
-        end
-        set_schema do
+    unless DB.table_exists?(:infos)
+      DB.create_table(:infos) do
             primary_key :id
             String      :yid, :unique => true, :empty => false
-            DateTime    :timestamp
+            DateTime    :timestamp, default: ::Sequel::CURRENT_TIMESTAMP
             String      :title
             File        :sig1
             String      :source
@@ -52,12 +47,13 @@ module DBUtils
             Fixnum      :views
             Bignum      :size
         end
-        create_table unless table_exists?
+    end
+    class Infos < Sequel::Model(:infos)
     end
 
     def DBUtils.add_yid(yid, src="UNKNOWN")
         begin
-            Infos.insert(yid: yid, timestamp: Time.now(), source:src, downloaded:'')
+            Infos.insert(yid: yid, timestamp: Time.now(), source:src, downloaded:'', file:'')
         rescue Sequel::UniqueConstraintViolation => e
             # We don't care about that
         end
@@ -117,10 +113,10 @@ module DBUtils
     def DBUtils.pop_yid_to_download(minimum_duration:nil, maximum_duration:nil)
         normal = Infos.where(downloaded: '').exclude(source: '')
         if minimum_duration
-            normal = normal.where('duration >= ?', minimum_duration)
+            normal = normal.where{duration >= minimum_duration}
         end
         if maximum_duration
-            normal = normal.where('duration <= ?', maximum_duration)
+            normal = normal.where{duration <= maximum_duration}
         end
         if normal.empty?
             # If we have RETRY, we already have popped, no need to re-check duration boudaries
@@ -135,7 +131,7 @@ module DBUtils
 
     def DBUtils.save_thumbs(yid, thumbs)
         Thumbs.multi_insert( thumbs.collect {|url|
-            {yid: yid, urlthumb: url}
+            {yid: yid, urlthumb: url, cached:false}
         })
     end
 
@@ -145,6 +141,9 @@ module DBUtils
 
     def DBUtils.update_video_infos_from_hash(yid, hash)
         # TODO consistent notation
+        if hash[:published].class == String
+          hash[:published] = Sequel.string_to_datetime(hash[:published])
+        end
         Infos.where(yid: yid).update(hash)
     end
 
