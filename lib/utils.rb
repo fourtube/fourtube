@@ -92,6 +92,8 @@ module YoutubeUtils
             return ($1.to_i * 60)
         when /PT(\d+)S/
             return $1.to_i
+        when /P(\d+)D/
+            return ($1.to_i * 86400)
         end
     end
 
