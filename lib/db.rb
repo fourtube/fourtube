@@ -154,5 +154,9 @@ module DBUtils
     def DBUtils.set_bien(yid, bien=true)
         Infos.where(yid: yid).update(bien: bien)
     end
+
+    def DBUtils.get_videos_to_watch()
+        Infos.where{Sequel.&({downloaded: DLDONE}, {bien: nil})}.order(:duration).reverse
+    end
 end
 
