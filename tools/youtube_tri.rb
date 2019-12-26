@@ -25,8 +25,8 @@ $config = JSON.load(File.read($config))
 
 $mplayer_path = "/usr/bin/mpv -vo=xv"
 $videos_path = $config["download"]["destination_dir"]
-$naze = File.join($path, "naze")
-$bien = File.join($path, "YT_Greatest_Hits_#{Time.now.strftime('%Y')}")
+$naze = File.join($video_path, "naze")
+$bien = File.join($video_path, "YT_Greatest_Hits_#{Time.now.strftime('%Y')}")
 
 db_path = $config["db"]["backend"]+"://"+$config["db"]["host"]+"/"+$config["db"]["table"]+"?user="+$config["db"]["user"]+"?password="+$config["db"]["pass"]
 DB = Sequel.connect(db_path)
@@ -57,7 +57,7 @@ while true
         video_path = $videos_path+"/*#{yid}*"
         file = Dir.glob(video_path)[0]
         unless file
-            puts "Can't find #{videos_path}"
+            puts "Can't find #{video_path}"
             next
         end
         i+=1
