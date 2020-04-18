@@ -42,6 +42,8 @@ class BasicYoutube < Fetcher
             return nil
         when "503"
             return nil
+        when "520"
+            return nil
         when "525"
             return nil
         end
