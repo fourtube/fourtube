@@ -407,7 +407,7 @@ class Main
                     rescue YTDLException => e
                         @log.err "Exception when downloading #{yid}: #{e.message}"
                     rescue Exception => e
-                        @log.err "Exception when downloading #{yid}"
+                        @log.err "Exception when downloading #{yid}: #{e.message}"
                         raise e
                     end
                     Dir.chdir(cur_dir)
