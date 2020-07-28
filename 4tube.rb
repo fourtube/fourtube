@@ -42,8 +42,12 @@ end
 class Main
     require "fileutils"
     require "json"
-    $: << File.join(File.dirname(__FILE__),"lib/taglib")
-    require "taglib"
+    begin
+        require "taglib"
+    rescue Exception => e
+        $: << File.join(File.dirname(__FILE__),"lib/taglib")
+        require "taglib"
+    end
 
     def initialize(options)
         @log = MyLogger.new()
