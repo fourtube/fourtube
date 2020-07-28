@@ -182,6 +182,10 @@ class Main
                 rescue Net::OpenTimeout, SocketError
                     @log.warn("woops, youtube is slow today")
                     sleep 10
+                rescue JSON::ParserError => e
+                    @log.warn("Youtube API didn't return a proper json")
+                    @log.warn(e)
+                    sleep 5
                 end
                 sleep 5
             end
