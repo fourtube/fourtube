@@ -325,16 +325,12 @@ class Main
         else
             raise Exception.new("WTF #{ytdl_msg}")
         end
-        @log.success "Downloading finished, now post processing"
-        output_files = Dir.glob("*#{yid}*",File::FNM_DOTMATCH)
-        if output_files.size > 2
-            pp output_files
-            raise "Too many output files in #{`pwd`}"
-        end
-        video_file = output_files.reject{ |f| f=~/\.jpg$/ }[0]
-        jpg_file = output_files.select{|f| f=~/\.jpg$/}[0]
-        if not jpg_file or not File.exist?(jpg_file)
+        @log.success "Downloading finished, now post processing #{yid}"
+        video_file = Dir.glob("*#{yid}*.mp4",File::FNM_DOTMATCH)[0]
+        jpg_file = video_file.sub(/\.mp4/, ".jpg")
+        if not File.exist?(jpg_file)
             if @video_converter_cmd
+                @log.debug("Creating thumbnail with command #{@video_converter_cmd} -i \"#{video_file}\" -vframes 1 -f image2 \"#{jpg_file}\"")
                 `#{@video_converter_cmd} -i \"#{video_file}\" -vframes 1 -f image2 \"#{jpg_file}\"`
             end
         end
