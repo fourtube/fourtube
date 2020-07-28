@@ -423,17 +423,6 @@ class Main
         return @downloader
     end
 
-    def start_local_downloaded_threads()
-        @local_downloader = Thread.new{
-            #Inotify stuff
-            while true
-            end
-            sleep 10
-        }
-        @local_downloader.abort_on_exception = true
-        return @local_downloader
-    end
-
     def go()
         DBUtils.clean_dl()
 
