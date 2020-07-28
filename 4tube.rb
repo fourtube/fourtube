@@ -400,7 +400,9 @@ class Main
                     cur_dir=Dir.pwd()
                     begin
                         do_download(yid)
-                        nb_to_dl = DBUtils.get_nb_to_dl()
+                        nb_to_dl = DBUtils.get_nb_to_dl(
+                          minimum_duration: $CONF["download"]["minimum_duration"],
+                          maximum_duration: $CONF["download"]["maximum_duration"])
                         @log.info "Still #{nb_to_dl} videos to download"
                     rescue YTDLException => e
                         @log.err "Exception when downloading #{yid}: #{e.message}"

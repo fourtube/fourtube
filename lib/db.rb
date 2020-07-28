@@ -80,8 +80,15 @@ module DBUtils
         return Infos.where(:yid => yid).get(:downloaded)
     end
 
-    def DBUtils.get_nb_to_dl()
-        return Infos.where(:downloaded => '').exclude(source: '').count()
+    def DBUtils.get_nb_to_dl(minimum_duration:nil, maximum_duration:nil)
+        normal = Infos.where(downloaded: '').exclude(source: '')
+        if minimum_duration
+            normal = normal.where{duration >= minimum_duration}
+        end
+        if maximum_duration
+            normal = normal.where{duration <= maximum_duration}
+        end
+        return normal.count()
     end
 
     def DBUtils.get_nb_videos()
