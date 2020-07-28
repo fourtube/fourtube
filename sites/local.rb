@@ -11,15 +11,18 @@ class LocalFetcher < Fetcher
     end
 
     def get_yids()
-        yids = []
-        return yids unless File.exist?(@file_path)
+      return [] unless File.exist?(@file_path)
+      yids = []
+      begin
         File.open(@file_path,"r").each_line do |l|
             yids.concat(extract_yids_from_string(l))
         end
         File.open(@file_path,"w") do |f|
             f.truncate(0)
         end
-        return yids
+      rescue Errno::EACCES
+      end
+      return yids
     end
 
     def wait
