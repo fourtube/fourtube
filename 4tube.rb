@@ -107,23 +107,26 @@ class Main
             while true
                 now = Time.now().to_i
                 # Retry when we've waited "wait" time + up to 10% of wait, to appear not too bot-y
-                Fetcher.sites.select{|site| now - site.last_check > (site.wait*(1 + (rand() / 10))) }.each do |site|
-                    count = 0
-                    begin
-                        site.get_yids().each { |yid|
-                            #@log.info "#{site} found #{yid}"
-                            DBUtils.add_yid(yid, site.name)
-                            count += 1
-                        }
-                        @log.info "#{site} found #{count} videos. Will retry in #{site.wait} seconds" unless site.wait < 30
-                    rescue SocketError => e
-                        # Internet is down, let's wait for a bit
-                        @log.err "Failed to fetch yids from #{site}. Internet or your proxy is down, let's retry later"
-                    rescue Exception => e
-                        # TODO don't break but send an email or something
-                        @log.err "Failed to fetch yids from #{site}"
-                    end
-                    site.last_check = now
+                sites_to_check =Fetcher.sites.select{|site| now - site.last_check > (site.wait*(1 + (rand() / 10))) }
+                if sites_to_check
+                  sites_to_check.each do |site|
+                      count = 0
+                      begin
+                          site.get_yids().each { |yid|
+                              @log.info "#{site} found #{yid}"
+                              DBUtils.add_yid(yid, site.name)
+                              count += 1
+                          }
+                          @log.info "#{site} found #{count} videos. Will retry in #{site.wait} seconds" unless site.wait < 30
+                      rescue SocketError => e
+                          # Internet is down, let's wait for a bit
+                          @log.err "Failed to fetch yids from #{site}. Internet or your proxy is down, let's retry later"
+  #                    rescue Exception => e
+  #                        # TODO don't break but send an email or something
+  #                        @log.err "Failed to fetch yids from #{site}"
+                      end
+                      site.last_check = now
+                  end
                 end
                 sleep tick
             end
