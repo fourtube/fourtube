@@ -356,12 +356,10 @@ class Main
             @log.err "Please update \"youtube_dl_cmd\" in config.json to your local installation of youtube-dl, or remove that key altogether, to use the one in your PATH"
             exit 1
         else
-            begin
-                res = `#{@youtube_dl_cmd} --version | egrep "^20[0-9.]+$"`
-                raise unless res=~/^20[0-9.]+$/
-            rescue Exception => e
-                @log.err "'#{@youtube_dl_cmd}' is not a valid youtube-dl binary"
-                exit
+            res = `#{@youtube_dl_cmd} --version | egrep "^20[0-9.]+$"`
+            unless res=~/^20[0-9.]+$/
+                @log.err "'#{@youtube_dl_cmd}' is not a valid youtube-dl binary #{res}"
+                raise
             end
         end
         #
