@@ -16,7 +16,7 @@ class Fetcher4chan < BasicYoutube
         if html
           return html.split(/<\/?a/).map{|l| l[chanpatt,1]}.compact.uniq.map{|yi|yi.gsub("<wbr>","")}.select {|yi| yi=~Fetcher::YIDPATTERN}
         end
-        nil
+        return []
     end
 end
 
